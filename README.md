@@ -24,14 +24,9 @@ Sure! Here's a README for your Web Server project that renders HTML pages:
 ```
 .
 ├── main.go
-├── pkg
-│   ├── handlers
-│   │   └── handlers.go
-│   └── render
-│       └── render.go
-└── templates
-    ├── home.page.tmpl
-    └── about.page.tmpl
+└── static
+    ├── form.html
+    └── index.html
 ```
 
 ## Files
@@ -47,67 +42,47 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"WebServer1stApp/pkg/handlers"
 )
 
-const portNumber = ":8000"
+func formHandler(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		fmt.Fprintf(w, "ParseForm() err: %v", err)
+	}
+	fmt.Fprint(w, "POST request successful")
+	name := r.FormValue("name")
+	address := r.FormValue("address")
+	email := r.FormValue("email")
+	fmt.Fprintf(w, "Name = %s\n", name)
+	fmt.Fprintf(w, "Address = %s\n", address)
+	fmt.Fprintf(w, "Email = %s\n", email)
+}
+
+func helloHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/hello" {
+		http.Error(w, "404 not found", http.StatusNotFound)
+		return
+	}
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusNotFound)
+		return
+	}
+	fmt.Fprint(w, "Hello Commanders")
+}
 
 func main() {
-	http.HandleFunc("/", handlers.Home)
-	http.HandleFunc("/about", handlers.About)
-
-	fmt.Println(fmt.Sprintf("Starting server on port %s", portNumber))
-	if err := http.ListenAndServe(portNumber, nil); err != nil {
+	fileServer := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fileServer)
+	http.HandleFunc("/form", formHandler)
+	http.HandleFunc("/hello", helloHandler)
+	fmt.Printf("Starting server on port 8080\n")
+	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
+
 ```
 
-### `pkg/render/render.go`
-
-This file contains the template rendering logic. It parses and executes HTML templates.
-
-```go
-package render
-
-import (
-	"fmt"
-	"html/template"
-	"net/http"
-)
-
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
-	parsedTemplate, _ := template.ParseFiles("./templates/" + tmpl)
-	err := parsedTemplate.Execute(w, nil)
-	if err != nil {
-		fmt.Println("Error Parsing template: ", err)
-		return
-	}
-}
-```
-
-### `pkg/handlers/handlers.go`
-
-This file contains the handler functions for different routes.
-
-```go
-package handlers
-
-import (
-	"net/http"
-	"WebServer1stApp/pkg/render"
-)
-
-func Home(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "home.page.tmpl")
-}
-
-func About(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "about.page.tmpl")
-}
-```
-
-### `templates/home.page.tmpl`
+### `static/form.html`
 
 This is the HTML template for the home page.
 
@@ -117,15 +92,25 @@ This is the HTML template for the home page.
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home Page</title>
+    <title>Static Site in Golang</title>
 </head>
 <body>
-    <h1>Welcome to the Home Page</h1>
+    </form>
+    <form action="/form" method="post">
+      <label for="name">Name:</label><br>
+      <input type="text" id="name" name="name"><br>
+      <label for="address">Address:</label><br>
+      <input type="text" id="address" name="address"><br>
+      <label for="emailaddress">Email:</label><br>
+      <input type="email" id="email" name="email"><br><br>
+        
+      <input type="submit" value="Submit">
+    </form> 
 </body>
 </html>
 ```
 
-### `templates/about.page.tmpl`
+### `static/index.html`
 
 This is the HTML template for the about page.
 
