@@ -13,7 +13,7 @@ Before you begin, ensure you have met the following requirements:
 1. Clone the repository:
 
    ```bash
-   git clone (https://github.com/Cybersayak/WebServer1stApp.git)
+   git clone https://github.com/Cybersayak/WebServer1stApp.git
 
 Sure! Here's a README for your Web Server project that renders HTML pages:
 
